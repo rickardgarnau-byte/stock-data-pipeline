@@ -2,7 +2,7 @@ from psycopg.rows import dict_row
 from fastapi import FastAPI
 from psycopg.types.json import Json
 from psycopg_pool import ConnectionPool
-from schemas import StockData
+from src.schemas import StockData
 
 DATABASE_URL = "postgresql://postgres:benny123@localhost:5440/stock_db"
 app = FastAPI(title="Unusual Volume")
@@ -30,5 +30,14 @@ def get_stocks():
         rows = conn.execute("SELECT * FROM stocks_raw").fetchall()
     return rows
 
-
+@app.post("/stocks/bulk")
+async def add_stocks_bulk(stocks: list[StockData]):
+    with pool.connection() as conn:
+        with conn.cursor() as cur:
+            for stock in stocks:
+                cur.execute(
+                    "INSERT INTO stocks_raw (stock) VALUES (%s)",
+                    (Json(stock.model_dump(mode="json")),)
+                )
+    return {"inserted": len(stocks)}
 
