@@ -1,30 +1,30 @@
 # Stock Data Pipeline
 
-En dataplattform som hämtar, lagrar och exponerar aktiedata via ett REST API. Projektet byggs stegvis och syftar till att demonstrera en komplett ELT-pipeline med moderna verktyg.
+A data platform that ingests, stores, and exposes stock market data via a REST API. The project is built incrementally to demonstrate a complete ELT pipeline using modern tools.
 
 ---
 
-## Teknikstack
+## Tech Stack
 
-- **FastAPI** – REST API-ramverk
-- **PostgreSQL** – Databas med JSONB-kolumn för rådata
-- **Pydantic** – Datavalidering via scheman
-- **psycopg3 + psycopg_pool** – Databasanslutning med connection pooling
-- **Docker** – PostgreSQL körs i container via docker-compose
-- **Postman** – Manuell testning av endpoints
+- **FastAPI** – REST API framework
+- **PostgreSQL** – Database with JSONB column for raw data storage
+- **Pydantic** – Data validation via schemas
+- **psycopg3 + psycopg_pool** – Database connection with connection pooling
+- **Docker** – PostgreSQL running in a container via docker-compose
+- **Postman** – Manual endpoint testing
 
 ---
 
-## Projektstruktur
+## Project Structure
 
 ```
 stock-data-pipeline/
 ├── src/
 │   ├── __init__.py
-│   ├── main.py          # FastAPI-applikationen och endpoints
-│   ├── schemas.py       # Pydantic-modell för aktiedata
-│   ├── database.py      # Databaslogik
-│   └── processor.py     # Databearbetning
+│   ├── main.py          # FastAPI application and endpoints
+│   ├── schemas.py       # Pydantic model for stock data
+│   ├── database.py      # Database logic
+│   └── processor.py     # Data processing
 ├── docker-compose.yaml
 ├── pyproject.toml
 └── uv.lock
@@ -32,21 +32,21 @@ stock-data-pipeline/
 
 ---
 
-## Databas
+## Database
 
-PostgreSQL körs i Docker på port `5440`. Tabellen `stocks_raw` lagrar aktiedata som JSONB:
+PostgreSQL runs in Docker on port `5440`. The `stocks_raw` table stores stock data as JSONB:
 
-| Kolumn | Typ | Beskrivning |
-|--------|-----|-------------|
-| id | bigint (PK) | Auto-genererat ID |
-| created_at | timestamp with time zone | Tidsstämpel för insert |
-| stock | jsonb | Aktiedata som JSON |
+| Column | Type | Description |
+|--------|------|-------------|
+| id | bigint (PK) | Auto-generated ID |
+| created_at | timestamp with time zone | Insert timestamp |
+| stock | jsonb | Stock data as JSON |
 
 ---
 
-## Datamodell
+## Data Model
 
-Definierad i `src/schemas.py` med Pydantic:
+Defined in `src/schemas.py` using Pydantic:
 
 ```python
 class StockData(BaseModel):
@@ -59,13 +59,13 @@ class StockData(BaseModel):
 
 ---
 
-## API-endpoints
+## API Endpoints
 
 ### `GET /`
-Healthcheck – returnerar ett hälsningsmeddelande.
+Health check – returns a greeting message.
 
 ### `POST /stocks`
-Insertar ett enskilt aktieobjekt.
+Inserts a single stock object.
 
 **Request body:**
 ```json
@@ -79,10 +79,10 @@ Insertar ett enskilt aktieobjekt.
 ```
 
 ### `GET /stocks`
-Hämtar alla rader från `stocks_raw`.
+Returns all rows from `stocks_raw`.
 
 ### `POST /stocks/bulk`
-Insertar flera aktieobjekt i en enda request.
+Inserts multiple stock objects in a single request.
 
 **Request body:**
 ```json
@@ -102,30 +102,30 @@ Insertar flera aktieobjekt i en enda request.
 
 ---
 
-## Kom igång
+## Getting Started
 
-### 1. Starta databasen
+### 1. Start the database
 ```bash
 docker compose up -d
 ```
 
-### 2. Starta API:et
+### 2. Start the API
 ```bash
 cd src
 fastapi dev main.py
 ```
 
-### 3. Öppna API-dokumentationen
-Gå till [http://localhost:8000/docs](http://localhost:8000/docs) för Swagger UI.
+### 3. Open the API documentation
+Navigate to [http://localhost:8000/docs](http://localhost:8000/docs) for Swagger UI.
 
 ---
 
-## Fas-plan
+## Roadmap
 
-| Fas | Status | Beskrivning |
-|-----|--------|-------------|
-| 1 – Grunderna | ✅ Klar | FastAPI, PostgreSQL, Pydantic, manuell datainmatning |
-| 2 – Transform med Pandas | ⬜ Kommande | Städa data, beräkna nyckeltal, spara i `stocks_clean` |
-| 3 – Automatisera datahämtning | ⬜ Kommande | `yfinance`, schemaläggning, riktig ELT-pipeline |
-| 4 – Linux & Docker | ⬜ Kommande | WSL, Dockerfile för FastAPI, fullständig dockerisering |
-| 5 – Dashboard/Visualisering | ⬜ Kommande | Analysendpoints, frontend eller JSON-rapporter |
+| Phase | Status | Description |
+|-------|--------|-------------|
+| 1 – Foundation | ✅ Done | FastAPI, PostgreSQL, Pydantic, manual data ingestion |
+| 2 – Transform with Pandas | ⬜ Upcoming | Clean data, calculate key metrics, store in `stocks_clean` |
+| 3 – Automated data fetching | ⬜ Upcoming | `yfinance` integration, scheduling, full ELT pipeline |
+| 4 – Linux & Docker | ⬜ Upcoming | WSL, Dockerfile for FastAPI, full containerization |
+| 5 – Dashboard / Visualization | ⬜ Upcoming | Analysis endpoints, frontend or structured JSON reports |
