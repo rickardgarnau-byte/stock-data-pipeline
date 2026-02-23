@@ -1,30 +1,38 @@
 # Stock Data Pipeline
-
-A data platform that ingests, stores, and exposes stock market data via a REST API. The project is built incrementally to demonstrate a complete ELT pipeline using modern tools.
+A data platform that ingests, stores, cleans, and analyzes stock market data via a REST API. The project is built incrementally to demonstrate a complete ELT pipeline using modern tools.
 
 ---
 
 ## Tech Stack
-
 - **FastAPI** – REST API framework
 - **PostgreSQL** – Database with JSONB column for raw data storage
 - **Pydantic** – Data validation via schemas
 - **psycopg3 + psycopg_pool** – Database connection with connection pooling
+- **Pandas** – Data cleaning, transformation, and analysis
 - **Docker** – PostgreSQL running in a container via docker-compose
+- **python-dotenv** – Environment variable management
 - **Postman** – Manual endpoint testing
 
 ---
 
 ## Project Structure
-
 ```
 stock-data-pipeline/
+├── data/
+│   ├── cleaned_data.csv       # Cleaned stock data
+│   ├── flagged_data.csv       # Rows flagged as suspicious
+│   └── rejected_data.csv      # Rows rejected as invalid
 ├── src/
 │   ├── __init__.py
-│   ├── main.py          # FastAPI application and endpoints
-│   ├── schemas.py       # Pydantic model for stock data
-│   ├── database.py      # Database logic
-│   └── processor.py     # Data processing
+│   ├── main.py                # FastAPI application and endpoints
+│   ├── schemas.py             # Pydantic model for stock data
+│   ├── database.py            # Database connection and pool
+│   ├── processor.py           # Data ingestion and cleaning
+│   ├── stock_analysis.py      # Metrics: pct_change, mean price, volatility
+│   └── quality_data.py        # Data flagging and rejection logic
+├── .env                       # Environment variables (not committed)
+├── .gitignore
+├── .dockerignore
 ├── docker-compose.yaml
 ├── pyproject.toml
 └── uv.lock
@@ -33,21 +41,17 @@ stock-data-pipeline/
 ---
 
 ## Database
-
 PostgreSQL runs in Docker on port `5440`. The `stocks_raw` table stores stock data as JSONB:
 
 | Column | Type | Description |
 |--------|------|-------------|
 | id | bigint (PK) | Auto-generated ID |
-| created_at | timestamp with time zone | Insert timestamp |
 | stock | jsonb | Stock data as JSON |
 
 ---
 
 ## Data Model
-
 Defined in `src/schemas.py` using Pydantic:
-
 ```python
 class StockData(BaseModel):
     ticker: str
@@ -102,20 +106,47 @@ Inserts multiple stock objects in a single request.
 
 ---
 
+## ELT Pipeline (Fas 2)
+
+Raw data from PostgreSQL is processed through the following steps:
+
+1. **Extract** – `processor.py` fetches all rows from `stocks_raw` via the connection pool
+2. **Clean** – strips whitespace, validates dates, removes duplicates and invalid prices
+3. **Flag** – `quality_data.py` flags suspicious values (e.g. price > 10 000, empty fields)
+4. **Reject** – rejects impossible values (e.g. price > 50 000, malformed currency)
+5. **Analyze** – `analysis.py` calculates:
+   - Daily percentage change per ticker (`pct_change`)
+   - Mean price per ticker
+   - Rolling volatility per ticker (std over 2-day window)
+
+Output is saved to the `data/` directory as CSV files.
+
+---
+
 ## Getting Started
 
-### 1. Start the database
+### 1. Configure environment
+Create a `.env` file in the project root:
+```
+DB_HOST=localhost
+DB_PORT=5440
+DB_USERNAME=postgres
+DB_PASSWORD=your_password
+DB_NAME=stock_db
+```
+
+### 2. Start the database
 ```bash
 docker compose up -d
 ```
 
-### 2. Start the API
+### 3. Start the API
 ```bash
 cd src
 fastapi dev main.py
 ```
 
-### 3. Open the API documentation
+### 4. Open the API documentation
 Navigate to [http://localhost:8000/docs](http://localhost:8000/docs) for Swagger UI.
 
 ---
@@ -125,7 +156,7 @@ Navigate to [http://localhost:8000/docs](http://localhost:8000/docs) for Swagger
 | Phase | Status | Description |
 |-------|--------|-------------|
 | 1 – Foundation | ✅ Done | FastAPI, PostgreSQL, Pydantic, manual data ingestion |
-| 2 – Transform with Pandas | ⬜ Upcoming | Clean data, calculate key metrics, store in `stocks_clean` |
+| 2 – Transform with Pandas | ✅ Done | Clean data, flag/reject bad data, calculate key metrics |
 | 3 – Automated data fetching | ⬜ Upcoming | `yfinance` integration, scheduling, full ELT pipeline |
 | 4 – Linux & Docker | ⬜ Upcoming | WSL, Dockerfile for FastAPI, full containerization |
 | 5 – Dashboard / Visualization | ⬜ Upcoming | Analysis endpoints, frontend or structured JSON reports |
