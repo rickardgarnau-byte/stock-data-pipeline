@@ -32,7 +32,7 @@ def get_stocks() -> pd.DataFrame:
     df_expanded["date"] = pd.to_datetime(df_expanded["date"], errors="coerce", yearfirst=True)
     df_expanded = df_expanded[df_expanded["date"].notna()]
     df_expanded = df_expanded.drop_duplicates(subset=["ticker", "date"])
-    df_expanded.to_csv("stocks_cleaned.csv", index=False)
+    df_expanded.to_csv('../data/cleaned_data.csv')
     return df_expanded
 
 if __name__ == "__main__":

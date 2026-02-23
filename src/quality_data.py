@@ -22,7 +22,7 @@ flagged_date = (
 )
 any_flagged = flagged_ticker | flagged_price | flagged_currency | flagged_date
 df_flagged = missing_df[any_flagged]
-df_flagged.to_csv("flagged_data.csv", index=False)
+df_flagged.to_csv('../data/flagged_data.csv')
 
 rejected_ticker = rejected_df["ticker"].isna()
 rejected_price = (
@@ -34,4 +34,4 @@ rejected_currency = (rejected_df["currency"].astype(str).str.strip().str.len() !
 rejected_date = pd.to_datetime(rejected_df["date"], errors="coerce").isna() & rejected_df["date"].notna()
 any_rejected = rejected_ticker | rejected_price | rejected_currency | rejected_date
 df_rejected = rejected_df[any_rejected]
-df_rejected.to_csv("rejected_data.csv", index=False)
+df_rejected.to_csv('../data/rejected_data.csv')
