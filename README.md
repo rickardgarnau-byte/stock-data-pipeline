@@ -139,6 +139,14 @@ The script runs continuously with a `while True` loop, checking every second if 
 
 ---
 
+## Linux & Docker (Phase 4)
+
+1. **Image** – Built on `python:3.13-slim` (Debian-based Linux)
+2. **Build** – `docker build -t stock-api .` packages the FastAPI app with all dependencies via `uv`
+3. **Run** – `docker run -p 8000:8000 --env-file .env stock-api` starts the container with credentials injected at runtime
+4. **Result** – FastAPI runs on `http://0.0.0.0:8000` inside an isolated Linux container, connecting to PostgreSQL on the host machine via `host.docker.internal`
+---
+
 ## Getting Started
 
 ### 1. Configure environment
@@ -174,5 +182,6 @@ Navigate to [http://localhost:8000/docs](http://localhost:8000/docs) for Swagger
 | 1 – Foundation | ✅ Done | FastAPI, PostgreSQL, Pydantic, manual data ingestion |
 | 2 – Transform with Pandas | ✅ Done | Clean data, flag/reject bad data, calculate key metrics |
 | 3 – Automated data fetching | ✅ Done | `yfinance` integration, daily scheduling, full ELT pipeline |
-| 4 – Linux & Docker | ⬜ Upcoming | WSL, Dockerfile for FastAPI, full containerization |
+| 4 – Linux & Docker | ✅ Upcoming | WSL, Dockerfile for FastAPI, full containerization |
 | 5 – Dashboard / Visualization | ⬜ Upcoming | Analysis endpoints, frontend or structured JSON reports |
+gi
