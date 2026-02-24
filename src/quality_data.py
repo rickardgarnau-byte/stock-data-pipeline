@@ -1,7 +1,7 @@
 import pandas as pd
 
-missing_df = pd.read_csv("stocks_cleaned.csv")
-rejected_df = pd.read_csv("stocks_cleaned.csv")
+missing_df = pd.read_csv("../data/cleaned_data.csv")
+rejected_df = pd.read_csv("../data/cleaned_data.csv")
 
 flagged_ticker = (
     (missing_df["ticker"].isna()) |
