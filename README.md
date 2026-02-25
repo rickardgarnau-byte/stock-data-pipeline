@@ -104,7 +104,7 @@ Raw data from PostgreSQL is processed through the following steps:
 5. **Analyze** – `stock_analysis.py` calculates:
    - Daily percentage change per ticker (`pct_change`)
    - Mean price per ticker
-   - Rolling volatility per ticker (std over 2-day window)
+   - Rolling volatility per ticker (std over specific window)
 
 Output is saved to the `data/` directory as CSV files.
 
@@ -117,7 +117,7 @@ Raw stock data is automatically fetched from Yahoo Finance and inserted into Pos
 1. **Fetch** – `yfinance` downloads historical OHLCV data for 70+ tickers
 2. **Transform** – each row is mapped to a dict with `ticker`, `price`, `currency`, `date`, `volume`
 3. **Load** – data is inserted into `stocks_raw` as JSONB via the connection pool
-4. **Schedule** – `schedule` library runs `fetch_data()` automatically once per day at 08:00
+4. **Schedule** – `schedule` library runs `fetch_data()` automatically once per day at 15:30
 
 The script runs continuously with a `while True` loop, checking every second if a scheduled job is pending.
 
@@ -138,9 +138,7 @@ A live stock dashboard served as a static HTML file, fetching data from the Fast
 
 - **Top Gainers** – tickers with highest daily % gain (green)
 - **Top Losers** – tickers with highest daily % loss (red)
-- **Top Volume** – tickers with highest trading volume (gold)
-- Auto-refreshes every 60 seconds
-- Stock prices are delayed by 15 minutes via Yahoo Finance.
+- **Top Volume** – tickers with highest trading volume (gold)s
 
 Open `dashboard.html` in a browser with the API running to view the dashboard.
 
