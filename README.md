@@ -140,7 +140,7 @@ A live stock dashboard served as a static HTML file, fetching data from the Fast
 - **Top Losers** – tickers with highest daily % loss (red)
 - **Top Volume** – tickers with highest trading volume (gold)
 - Percentage change calculated against previous day's closing price
-- Stock prices are delayed by 15 minutes via Yahoo Finance
+- Stock prices are slightly delayed via Yahoo Finance
 
 Open `dashboard.html` in a browser with the API running to view the dashboard.
 
