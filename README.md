@@ -162,17 +162,24 @@ DB_NAME=stock_db
 ```bash
 docker compose up -d
 ```
+### 3. Run the data fetcher
+```bash
+cd src
+python fetcher.py
+```
+Note: fetcher.py must be running continuously to collect intraday data. It fetches minute-by-minute data for 70+ tickers during market hours (15:30–22:00 CET).
 
-### 3. Start the API
+
+### 4. Start the API
 ```bash
 cd src
 fastapi dev main.py
 ```
 
-### 4. Open the API documentation
+### 5. Open the API documentation
 Navigate to [http://localhost:8000/docs](http://localhost:8000/docs) for Swagger UI.
 
-### 5. Open the dashboard
+### 6. Open the dashboard
 Open `dashboard.html` in your browser.
 
 ---
