@@ -1,5 +1,5 @@
 import pandas as pd
-from database import pool
+from src.database import pool
 from psycopg.rows import dict_row
 
 def fetch_stocks():

@@ -3,6 +3,10 @@ from fastapi import FastAPI
 from psycopg.types.json import Json
 from src.schemas import StockData
 from src.database import pool
+from src.daily_stats import get_top_gainers as fetch_top_gainers
+from src.daily_stats import get_top_volume as fetch_top_volume
+from src.daily_stats import get_top_volume as fetch_top_losers
+
 
 app = FastAPI(title="Unusual Volume")
 
@@ -39,3 +43,14 @@ async def add_stocks_bulk(stocks: list[StockData]):
                 )
     return {"inserted": len(stocks)}
 
+@app.get("/top_gainers")
+def top_gainers_endpoint():
+    return fetch_top_gainers()
+
+@app.get("/top_volume")
+def get_top_volume():
+    return fetch_top_volume()
+
+@app.get("/top_losers")
+def get_top_losers():
+    return fetch_top_losers()

@@ -28,3 +28,4 @@ schedule.every().day.at("15:55").do(fetch_data)
 while True:
     schedule.run_pending()
     time.sleep(1)
+
