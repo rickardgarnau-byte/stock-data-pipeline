@@ -190,3 +190,9 @@ Open `dashboard.html` in your browser.
 ## LLM usage: 
 LLM was used as an interactive support during development – not to generate finished code, 
 but as a complement to googling and documentation when I got stuck.
+
+## Note
+- `dashboard.html` was generated with AI assistance and not written manually.
+- CORS middleware was added to `main.py` to allow the browser to make requests 
+  to the API from a different origin (the HTML file). Without it, the browser 
+  blocks requests between different ports/domains for security reasons.
