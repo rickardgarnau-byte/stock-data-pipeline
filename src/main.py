@@ -5,8 +5,8 @@ from src.schemas import StockData
 from src.database import pool
 from src.daily_stats import get_top_gainers as fetch_top_gainers
 from src.daily_stats import get_top_volume as fetch_top_volume
-from src.daily_stats import get_top_volume as fetch_top_losers
-
+from src.daily_stats import get_top_losers as fetch_top_losers
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Unusual Volume")
 
@@ -54,3 +54,11 @@ def get_top_volume():
 @app.get("/top_losers")
 def get_top_losers():
     return fetch_top_losers()
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
