@@ -140,6 +140,7 @@ A live stock dashboard served as a static HTML file, fetching data from the Fast
 - **Top Losers** – tickers with highest daily % loss (red)
 - **Top Volume** – tickers with highest trading volume (gold)
 - Auto-refreshes every 60 seconds
+- Stock prices are delayed by 15 minutes via Yahoo Finance.
 
 Open `dashboard.html` in a browser with the API running to view the dashboard.
 
@@ -185,3 +186,7 @@ Open `dashboard.html` in your browser.
 | 3 – Automated data fetching | ✅ Done | `yfinance` integration, daily scheduling, full ELT pipeline |
 | 4 – Linux & Docker | ✅ Done | Dockerfile for FastAPI, full containerization |
 | 5 – Dashboard / Visualization | ✅ Done | Top gainers/losers/volume endpoints, live HTML dashboard |
+
+## LLM usage: 
+LLM was used as an interactive support during development – not to generate finished code, 
+but as a complement to googling and documentation when I got stuck.
