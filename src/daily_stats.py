@@ -1,39 +1,67 @@
 from src.processor import get_stocks
+from datetime import date, timedelta
+import yfinance as yf
+import pandas as pd
 
+tickers = ['AAPL','ADBE','AMZN','BAC','IBM','MSFT','INTC','GOOGL','NFLX','NVDA','QCOM','WFC','BA','C','JPM','TSLA','INSM','TSM','KMI','ISRG','GEV','NBIS','SNOW','DLO','UBER','HIMS','V','PYPL','LMND','MA','AXP','MELI','ACN','DDOG','ONDS','NU','RIG','PLTR','PATH','SNAP','ORCL','BMNR','HOOD','FIG','AMD','PFE','MU','NOW','CRWV','CPNG','U','SNDK','AVGO','NKE','CRWD','CRM','RKLB','FCX','ASTS','SHOP','CPRT','DIS','GTLB','TEAM','MRVL','BE','LUMN','ANET','LUNR','NET','TXN','SBUX']
+
+def get_prev_close():
+    yesterday = date.today() - timedelta(days=1)
+    two_days_ago = date.today() - timedelta(days=2)
+    df = yf.download(tickers, start=two_days_ago, end=date.today(), progress=False)["Close"]
+    return df.iloc[-1]
 
 def get_top_gainers():
     df = get_stocks()
     df = df.sort_values(by='date').reset_index(drop=True)
-    df["pct_change"] = df.groupby("ticker")["price"].pct_change()
-    latest_date = df["date"].max()
-    df = df[df["date"] == latest_date]
-    df = df.sort_values(by=('pct_change'), ascending=False)
-    df["pct_change"] = (df["pct_change"] * 100).round(2)
-    df["price"] = df["price"].round(2)
-    df["date"] = df["date"].dt.strftime("%Y-%m-%d")
+    today = date.today()
+    df = df[df["date"].dt.date == today]
 
-    return df.head(10).to_dict(orient="records")
+    prev_close = get_prev_close()
+    last_price = df.groupby("ticker")["price"].last()
+    pct_change = ((last_price - prev_close) / prev_close * 100).round(2)
 
-def get_top_volume():
-    df = get_stocks()
-    df = df.sort_values(by='date').reset_index(drop=True)
-    latest_date = df["date"].max()
-    df = df[df["date"] == latest_date]
-    df = df.sort_values(by=('volume'), ascending=False)
-    df["price"] = df["price"].round(2)
-    df["date"] = df["date"].dt.strftime("%Y-%m-%d")
+    result = last_price.reset_index()
+    result.columns = ["ticker", "price"]
+    result["pct_change"] = result["ticker"].map(pct_change)
+    result["price"] = result["price"].round(2)
+    result["date"] = df.groupby("ticker")["date"].last().values
+    result["currency"] = "USD"
+    result["volume"] = df.groupby("ticker")["volume"].last().values
 
-    return df.head(10).to_dict(orient="records")
+    result = result.sort_values(by="pct_change", ascending=False)
+    return result.head(10).to_dict(orient="records")
 
 def get_top_losers():
     df = get_stocks()
     df = df.sort_values(by='date').reset_index(drop=True)
-    df["pct_change"] = df.groupby("ticker")["price"].pct_change()
+    today = date.today()
+    df = df[df["date"].dt.date == today]
+
+    prev_close = get_prev_close()
+    last_price = df.groupby("ticker")["price"].last()
+    pct_change = ((last_price - prev_close) / prev_close * 100).round(2)
+
+    result = last_price.reset_index()
+    result.columns = ["ticker", "price"]
+    result["pct_change"] = result["ticker"].map(pct_change)
+    result["price"] = result["price"].round(2)
+    result["date"] = df.groupby("ticker")["date"].last().values
+    result["currency"] = "USD"
+    result["volume"] = df.groupby("ticker")["volume"].last().values
+
+    result = result.sort_values(by="pct_change", ascending=True)
+    return result.head(10).to_dict(orient="records")
+
+def get_top_volume():
+    df = get_stocks()
+    df = df.sort_values(by='date').reset_index(drop=True)
+    today = date.today()
+    df = df[df["date"].dt.date == today]
     latest_date = df["date"].max()
     df = df[df["date"] == latest_date]
-    df = df.sort_values(by=('pct_change'), ascending=True)
-    df["pct_change"] = (df["pct_change"] * 100).round(2)
+    df = df.sort_values(by='volume', ascending=False)
     df["price"] = df["price"].round(2)
-    df["date"] = df["date"].dt.strftime("%Y-%m-%d")
+    df["date"] = df["date"].dt.strftime("%Y-%m-%d %H:%M")
 
     return df.head(10).to_dict(orient="records")
