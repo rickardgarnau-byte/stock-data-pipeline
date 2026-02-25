@@ -9,9 +9,8 @@ A data platform that ingests, stores, cleans, and analyzes stock market data via
 - **Pydantic** – Data validation via schemas
 - **psycopg3 + psycopg_pool** – Database connection with connection pooling
 - **Pandas** – Data cleaning, transformation, and analysis
-- **Docker** – PostgreSQL running in a container via docker-compose
+- **Docker** – PostgreSQL and FastAPI running in containers
 - **python-dotenv** – Environment variable management
-- **Postman** – Manual endpoint testing
 - **yfinance** – Fetches historical stock data from Yahoo Finance
 - **schedule** – Schedules daily data fetching
 
@@ -32,10 +31,13 @@ stock-data-pipeline/
 │   ├── database.py            # Database connection and pool
 │   ├── processor.py           # Data ingestion and cleaning
 │   ├── stock_analysis.py      # Metrics: pct_change, mean price, volatility
-│   └── quality_data.py        # Data flagging and rejection logic
+│   ├── quality_data.py        # Data flagging and rejection logic
+│   └── daily_stats.py         # Top gainers, losers and volume logic
+├── dashboard.html             # Live stock dashboard
 ├── .env                       # Environment variables (not committed)
 ├── .gitignore
 ├── .dockerignore
+├── Dockerfile
 ├── docker-compose.yaml
 ├── pyproject.toml
 └── uv.lock
@@ -74,38 +76,20 @@ Health check – returns a greeting message.
 ### `POST /stocks`
 Inserts a single stock object.
 
-**Request body:**
-```json
-{
-  "ticker": "KMI",
-  "price": 32.58,
-  "currency": "USD",
-  "date": "2026-02-20",
-  "volume": 12500000
-}
-```
-
 ### `GET /stocks`
 Returns all rows from `stocks_raw`.
 
 ### `POST /stocks/bulk`
 Inserts multiple stock objects in a single request.
 
-**Request body:**
-```json
-[
-  {"ticker": "KMI",  "price": 32.58,  "currency": "USD", "date": "2026-02-20", "volume": 12500000},
-  {"ticker": "TSMC", "price": 371.34, "currency": "USD", "date": "2026-02-20", "volume": 8900000},
-  {"ticker": "GEV",  "price": 835.26, "currency": "USD", "date": "2026-02-20", "volume": 3200000},
-  {"ticker": "INSM", "price": 164.45, "currency": "USD", "date": "2026-02-20", "volume": 12500000},
-  {"ticker": "ISRG", "price": 503.34, "currency": "USD", "date": "2026-02-20", "volume": 8900000}
-]
-```
+### `GET /top_gainers`
+Returns the top 10 tickers with the highest daily percentage gain.
 
-**Response:**
-```json
-{"inserted": 5}
-```
+### `GET /top_losers`
+Returns the top 10 tickers with the highest daily percentage loss.
+
+### `GET /top_volume`
+Returns the top 10 tickers by trading volume for the latest date.
 
 ---
 
@@ -117,7 +101,7 @@ Raw data from PostgreSQL is processed through the following steps:
 2. **Clean** – strips whitespace, validates dates, removes duplicates and invalid prices
 3. **Flag** – `quality_data.py` flags suspicious values (e.g. price > 10 000, empty fields)
 4. **Reject** – rejects impossible values (e.g. price > 50 000, malformed currency)
-5. **Analyze** – `analysis.py` calculates:
+5. **Analyze** – `stock_analysis.py` calculates:
    - Daily percentage change per ticker (`pct_change`)
    - Mean price per ticker
    - Rolling volatility per ticker (std over 2-day window)
@@ -130,7 +114,7 @@ Output is saved to the `data/` directory as CSV files.
 
 Raw stock data is automatically fetched from Yahoo Finance and inserted into PostgreSQL via `fetcher.py`.
 
-1. **Fetch** – `yfinance` downloads historical OHLCV data for each ticker
+1. **Fetch** – `yfinance` downloads historical OHLCV data for 70+ tickers
 2. **Transform** – each row is mapped to a dict with `ticker`, `price`, `currency`, `date`, `volume`
 3. **Load** – data is inserted into `stocks_raw` as JSONB via the connection pool
 4. **Schedule** – `schedule` library runs `fetch_data()` automatically once per day at 08:00
@@ -145,6 +129,20 @@ The script runs continuously with a `while True` loop, checking every second if 
 2. **Build** – `docker build -t stock-api .` packages the FastAPI app with all dependencies via `uv`
 3. **Run** – `docker run -p 8000:8000 --env-file .env stock-api` starts the container with credentials injected at runtime
 4. **Result** – FastAPI runs on `http://0.0.0.0:8000` inside an isolated Linux container, connecting to PostgreSQL on the host machine via `host.docker.internal`
+
+---
+
+## Dashboard (Phase 5)
+
+A live stock dashboard served as a static HTML file, fetching data from the FastAPI endpoints.
+
+- **Top Gainers** – tickers with highest daily % gain (green)
+- **Top Losers** – tickers with highest daily % loss (red)
+- **Top Volume** – tickers with highest trading volume (gold)
+- Auto-refreshes every 60 seconds
+
+Open `dashboard.html` in a browser with the API running to view the dashboard.
+
 ---
 
 ## Getting Started
@@ -173,6 +171,9 @@ fastapi dev main.py
 ### 4. Open the API documentation
 Navigate to [http://localhost:8000/docs](http://localhost:8000/docs) for Swagger UI.
 
+### 5. Open the dashboard
+Open `dashboard.html` in your browser.
+
 ---
 
 ## Roadmap
@@ -182,6 +183,5 @@ Navigate to [http://localhost:8000/docs](http://localhost:8000/docs) for Swagger
 | 1 – Foundation | ✅ Done | FastAPI, PostgreSQL, Pydantic, manual data ingestion |
 | 2 – Transform with Pandas | ✅ Done | Clean data, flag/reject bad data, calculate key metrics |
 | 3 – Automated data fetching | ✅ Done | `yfinance` integration, daily scheduling, full ELT pipeline |
-| 4 – Linux & Docker | ✅ Upcoming | WSL, Dockerfile for FastAPI, full containerization |
-| 5 – Dashboard / Visualization | ⬜ Upcoming | Analysis endpoints, frontend or structured JSON reports |
-gi
+| 4 – Linux & Docker | ✅ Done | Dockerfile for FastAPI, full containerization |
+| 5 – Dashboard / Visualization | ✅ Done | Top gainers/losers/volume endpoints, live HTML dashboard |
