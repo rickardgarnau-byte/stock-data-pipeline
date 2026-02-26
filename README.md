@@ -140,7 +140,7 @@ A live stock dashboard served as a static HTML file, fetching data from the Fast
 - **Top Losers** – tickers with highest daily % loss (red)
 - **Top Volume** – tickers with highest trading volume (gold)
 - Percentage change calculated against previous day's closing price
-- Stock prices are delayed by 15 minutes via Yahoo Finance
+- Stock prices are slightly delayed via Yahoo Finance
 
 Open `dashboard.html` in a browser with the API running to view the dashboard.
 
@@ -162,17 +162,24 @@ DB_NAME=stock_db
 ```bash
 docker compose up -d
 ```
+### 3. Run the data fetcher
+```bash
+cd src
+python fetcher.py
+```
+Note: fetcher.py must be running continuously to collect intraday data. It fetches minute-by-minute data for 70+ tickers during market hours (15:30–22:00 CET).
 
-### 3. Start the API
+
+### 4. Start the API
 ```bash
 cd src
 fastapi dev main.py
 ```
 
-### 4. Open the API documentation
+### 5. Open the API documentation
 Navigate to [http://localhost:8000/docs](http://localhost:8000/docs) for Swagger UI.
 
-### 5. Open the dashboard
+### 6. Open the dashboard
 Open `dashboard.html` in your browser.
 
 ---
@@ -190,3 +197,9 @@ Open `dashboard.html` in your browser.
 ## LLM usage: 
 LLM was used as an interactive support during development – not to generate finished code, 
 but as a complement to googling and documentation when I got stuck.
+
+## Note
+- `dashboard.html` was generated with AI assistance and not written manually.
+- CORS middleware was added to `main.py` to allow the browser to make requests 
+  to the API from a different origin (the HTML file). Without it, the browser 
+  blocks requests between different ports/domains for security reasons.
