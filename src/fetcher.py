@@ -20,7 +20,7 @@ def fetch_data():
         }
             with pool.connection() as conn:
                 conn.execute(
-                    "INSERT INTO stocks_raw (stock) VALUES (%s)",
+                    "INSERT INTO stocks_raw (stock) VALUES (%s) ON CONFLICT DO NOTHING",
                     (Json(stock_dict),)
                 )
 
