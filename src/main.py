@@ -1,25 +1,27 @@
 from psycopg.rows import dict_row
-from fastapi import FastAPI
 from psycopg.types.json import Json
 from src.schemas import StockData
 from src.database import pool
 from src.daily_stats import get_top_gainers as fetch_top_gainers
 from src.daily_stats import get_top_volume as fetch_top_volume
 from src.daily_stats import get_top_losers as fetch_top_losers
+from src.daily_stats import get_portfolio as fetch_portfolio
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Depends
+app = FastAPI(title="Hello World")
 
-app = FastAPI(title="Unusual Volume")
-
+def get_conn():
+    with pool.connection() as conn:
+        yield conn
 @app.get("/")
 def read_root():
     return {"message": "Hello World"}
 
 @app.get("/stocks")
-def get_stocks():
-    with pool.connection() as conn:
+def get_stocks(conn = Depends(get_conn)):
         conn.row_factory = dict_row
         rows = conn.execute("SELECT * FROM stocks_raw").fetchall()
-    return rows
+        return rows
 
 @app.post("/stocks")
 def insert_stock(stock: StockData):
@@ -54,6 +56,10 @@ def get_top_volume():
 @app.get("/top_losers")
 def get_top_losers():
     return fetch_top_losers()
+
+@app.get("/portfolio_tracker")
+def get_portfolio():
+    return fetch_portfolio()
 
 
 app.add_middleware(

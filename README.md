@@ -33,6 +33,9 @@ stock-data-pipeline/
 │   ├── stock_analysis.py      # Metrics: pct_change, mean price, volatility
 │   ├── quality_data.py        # Data flagging and rejection logic
 │   └── daily_stats.py         # Top gainers, losers and volume logic
+├── tests/
+│   ├── __init__.py
+│   └── test_main.py           # Pytest
 ├── dashboard.html             # Live stock dashboard
 ├── .env                       # Environment variables (not committed)
 ├── .gitignore

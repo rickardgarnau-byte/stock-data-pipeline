@@ -1,11 +1,6 @@
-from selectors import SelectSelector
-
 from fastapi.testclient import TestClient
-from fastapi import Depends, FastAPI
 from src.main import app, get_conn
-from src.database import pool
-from typing import Annotated
-import pytest
+
 
 from unittest.mock import MagicMock
 
@@ -18,17 +13,7 @@ app.dependency_overrides[get_conn] = override_get_conn
 
 client = TestClient(app)
 
-
 def test_get_stocks():
     response = client.get("/stocks")
     assert response.status_code == 200
     assert response.json() == [{"ticker": "AAPL"}]
-
-
-
-
-
-
-def test_top_gainers():
-    response = client.get("/top_gainers")
-    assert response.status_code == 200

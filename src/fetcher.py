@@ -24,6 +24,7 @@ def fetch_data():
                     (Json(stock_dict),)
                 )
 
+
 schedule.every().day.at("15:30").do(fetch_data)
 while True:
     schedule.run_pending()
