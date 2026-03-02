@@ -1,12 +1,14 @@
 import pandas as pd
 from src.database import pool
-from fastapi import Depends
+from psycopg.rows import dict_row
 
 def get_conn():
     with pool.connection() as conn:
         yield conn
 
-def fetch_stocks(conn = Depends(get_conn)):
+def fetch_stocks():
+    with pool.connection() as conn:
+        conn.row_factory = dict_row
         rows = conn.execute("SELECT * FROM stocks_raw").fetchall()
         df = pd.DataFrame(rows)
         return df

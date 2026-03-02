@@ -16,6 +16,7 @@
     --red: #ff3366;
     --gold: #ffd166;
     --accent: #6c63ff;
+    --blue: #60a5fa;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -60,10 +61,18 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .grid-bottom {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
 
   @media (max-width: 900px) {
     .grid { grid-template-columns: 1fr; }
+    .grid-bottom { grid-template-columns: 1fr; }
   }
 
   .panel {
@@ -79,6 +88,7 @@
   .panel:nth-child(1) { animation-delay: 0.1s; }
   .panel:nth-child(2) { animation-delay: 0.2s; }
   .panel:nth-child(3) { animation-delay: 0.3s; }
+  .panel.portfolio { animation-delay: 0.4s; }
 
   @keyframes fadeUp {
     to { opacity: 1; transform: translateY(0); }
@@ -109,8 +119,19 @@
   .dot-green { background: var(--green); box-shadow: 0 0 8px var(--green); }
   .dot-red { background: var(--red); box-shadow: 0 0 8px var(--red); }
   .dot-gold { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+  .dot-blue { background: var(--blue); box-shadow: 0 0 8px var(--blue); }
 
   .panel-body { padding: 0.5rem 0; }
+
+  .portfolio .panel-body {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    padding: 0;
+  }
+
+  @media (max-width: 900px) {
+    .portfolio .panel-body { grid-template-columns: 1fr; }
+  }
 
   .row {
     display: flex;
@@ -133,7 +154,7 @@
   .ticker {
     font-family: 'Space Mono', monospace;
     font-size: 0.85rem;
-    font-weight: 700;
+    font-weight: 400;
     color: var(--text);
     min-width: 60px;
   }
@@ -221,6 +242,18 @@
   </div>
 </div>
 
+<div class="grid-bottom">
+  <div class="panel portfolio" id="portfolio-panel">
+    <div class="panel-header">
+      <div class="dot dot-blue"></div>
+      <h2>My Portfolio</h2>
+    </div>
+    <div class="panel-body" id="portfolio-body">
+      <div class="loading">LOADING...</div>
+    </div>
+  </div>
+</div>
+
 <script>
   const BASE = 'http://localhost:8000';
 
@@ -230,7 +263,7 @@
   function formatVolume(v) {
     if (v >= 1e9) return (v / 1e9).toFixed(1) + 'B';
     if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
-    return v.toLocaleString()
+    return v.toLocaleString();
   }
 
   async function loadGainers() {
@@ -287,14 +320,36 @@
     }
   }
 
+  async function loadPortfolio() {
+    try {
+      const res = await fetch(`${BASE}/portfolio`);
+      const data = await res.json();
+      const body = document.getElementById('portfolio-body');
+      body.innerHTML = data.map((s, i) => `
+        <div class="row" style="animation-delay:${i * 0.05}s">
+          <span class="ticker">${s.ticker}</span>
+          <span class="price">$${s.price}</span>
+          <span class="change ${s.pct_change >= 0 ? 'positive' : 'negative'}">
+            ${s.pct_change >= 0 ? '+' : ''}${s.pct_change}%
+          </span>
+        </div>
+      `).join('');
+    } catch(e) {
+      document.getElementById('portfolio-body').innerHTML = '<div class="error">Failed to load</div>';
+    }
+  }
+
   loadGainers();
   loadLosers();
   loadVolume();
+  loadPortfolio();
+
   setInterval(() => {
-  loadGainers();
-  loadLosers();
-  loadVolume();
-}, 60000);
+    loadGainers();
+    loadLosers();
+    loadVolume();
+    loadPortfolio();
+  }, 60000);
 </script>
 </body>
 </html>

@@ -57,7 +57,8 @@ def get_top_volume():
 def get_top_losers():
     return fetch_top_losers()
 
-@app.get("/portfolio_tracker")
+
+@app.get("/portfolio")
 def get_portfolio():
     return fetch_portfolio()
 

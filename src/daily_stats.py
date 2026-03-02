@@ -8,8 +8,10 @@ tickers = ['AAPL','ADBE','AMZN','BAC','IBM','MSFT','INTC','GOOGL','NFLX','NVDA',
 def get_prev_close():
     yesterday = date.today() - timedelta(days=1)
     two_days_ago = date.today() - timedelta(days=2)
-    df = yf.download(tickers, start=two_days_ago, end=date.today(), progress=False)["Close"]
-    return df.iloc[-1]
+    df = yf.download(tickers, period="5d", progress=False)["Close"]
+    return df.iloc[-2]
+
+
 
 def get_top_gainers():
     df = get_stocks()
@@ -29,6 +31,7 @@ def get_top_gainers():
     result["currency"] = "USD"
     result["volume"] = df.groupby("ticker")["volume"].last().values
 
+    result = result.dropna()
     result = result.sort_values(by="pct_change", ascending=False)
     return result.head(10).to_dict(orient="records")
 
@@ -50,21 +53,27 @@ def get_top_losers():
     result["currency"] = "USD"
     result["volume"] = df.groupby("ticker")["volume"].last().values
 
+    result = result.dropna()
     result = result.sort_values(by="pct_change", ascending=True)
     return result.head(10).to_dict(orient="records")
+
 
 def get_top_volume():
     df = get_stocks()
     df = df.sort_values(by='date').reset_index(drop=True)
     today = date.today()
-    df = df[df["date"].dt.date == today]
-    latest_date = df["date"].max()
-    df = df[df["date"] == latest_date]
-    df = df.sort_values(by='volume', ascending=False)
-    df["price"] = df["price"].round(2)
-    df["date"] = df["date"].dt.strftime("%Y-%m-%d %H:%M")
 
-    return df.head(10).to_dict(orient="records")
+    df = df[df["date"].dt.date == today]
+    if df.empty:
+        return []
+
+    result = df.sort_values('date').groupby('ticker').tail(1).copy()
+    result = result.sort_values(by='volume', ascending=False)
+    result["price"] = result["price"].round(2)
+    result["date"] = result["date"].dt.strftime("%Y-%m-%d %H:%M")
+    result["currency"] = "USD"
+
+    return result.head(10).to_dict(orient="records")
 
 
 portfolio = ['TSM', 'GEV', 'ENR.DE', 'KMI', 'INSM', 'ISRG']
@@ -78,19 +87,17 @@ def get_prev_close_portfolio():
 def get_portfolio():
     today = date.today()
     yesterday = today - timedelta(days=1)
-    current = yf.download(portfolio, period="1d", interval="1m")["Close"].iloc[-1]
-    prev_close = yf.download(portfolio, start=yesterday, end=today, progress=False)["Close"].iloc[-1]
+    current = yf.download(portfolio, period="5d", interval="1m")["Close"].iloc[-1]
+    prev_close = yf.download(portfolio, period="5d", progress=False)["Close"].iloc[-2]
 
     pct_change = ((current - prev_close) / prev_close * 100).round(2)
 
     result = pd.DataFrame({
         "ticker": current.index,
         "price": current.values.round(2),
-        "pct_change": pct_change.values.round(2),
+        "pct_change": pct_change.reindex(current.index).values.round(2),
         "currency": "USD"
     })
-
+    result = result.dropna()
     result = result.sort_values(by="pct_change", ascending=False)
     return result.to_dict(orient="records")
-
-print(get_portfolio())

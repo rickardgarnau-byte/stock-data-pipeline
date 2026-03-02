@@ -186,6 +186,30 @@ Navigate to [http://localhost:8000/docs](http://localhost:8000/docs) for Swagger
 Open `dashboard.html` in your browser.
 
 ---
+## 🛠 Technical Challenges & Lessons Learned
+
+Developing a real-time financial pipeline presented several "real-world" engineering hurdles. Below are the most significant challenges and how they were resolved:
+
+### 1. The "Monday Morning" Logic Gap
+**Challenge:** During testing on a Monday, the dashboard showed 0% price changes for all stocks. 
+**Diagnosis:** The system was comparing Monday's live price against the most recent record in the database, which was also from Monday. In financial terms, `pct_change` must be calculated against the *previous trading day's close* (Friday), not the current day's opening.
+**Solution:** Refactored the analysis engine to use dynamic Pandas indexing (`iloc[-2]`). This ensures the reference point is always the last valid close, regardless of weekends or market holidays.
+
+### 2. Resource Exhaustion & Thread Stability
+**Challenge:** The Python process would occasionally crash with `RuntimeError: couldn't stop thread` or database connection timeouts.
+**Diagnosis:** The data fetcher was accidentally triggered every second inside a `while True` loop, causing hundreds of overlapping `yfinance` threads and exhausting the PostgreSQL connection pool.
+**Solution:** Decoupled the execution logic. The fetcher is now strictly managed by the `schedule` library, with a 5-minute interval during market hours, ensuring each batch of 70+ tickers completes before the next one starts.
+
+### 3. Asynchronous Data Latency in Dashboards
+**Challenge:** Tickers would randomly disappear from the "Top Volume" or "Gainers" lists.
+**Diagnosis:** The API filtered data based on a global `max_date`. Since different tickers update at slightly different intervals (latency), a ticker that hadn't updated in the last 5 seconds was excluded.
+**Solution:** Implemented `.groupby('ticker').tail(1)` in the Pandas transformation layer. This ensures the dashboard always displays the *latest known state* for every ticker, providing a consistent user experience despite network jitter.
+
+### 4. Idempotency & Data Integrity
+**Challenge:** Manual restarts of the fetcher risked creating duplicate entries for the same minute.
+**Solution:** Leveraged PostgreSQL's `ON CONFLICT DO NOTHING` combined with a unique constraint on the raw data. This makes the ELT pipeline **idempotent**, meaning it can be restarted at any time to "fill the gaps" without corrupting the historical dataset.
+
+---
 
 ## Roadmap
 
@@ -197,9 +221,11 @@ Open `dashboard.html` in your browser.
 | 4 – Linux & Docker | ✅ Done | Dockerfile for FastAPI, full containerization |
 | 5 – Dashboard / Visualization | ✅ Done | Top gainers/losers/volume endpoints, live HTML dashboard |
 
+
 ## LLM usage: 
-LLM was used as an interactive support during development – not to generate finished code, 
-but as a complement to googling and documentation when I got stuck.
+Claude was utilized as a pair-programming partner to troubleshoot specific library errors (e.g., yfinance thread issues)
+and to assist with the boilerplate CSS for the dashboard. All core logic, ELT-pipeline architecture, 
+and database schemas were designed and implemented manually to ensure deep understanding.
 
 ## Note
 - `dashboard.html` was generated with AI assistance and not written manually.
